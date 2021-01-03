@@ -7,17 +7,9 @@ const routes = [
   {
     path: "/",
     name: "Index",
-    component: () => import('../views/DisplayList.vue'),
+    component: () => import('../views/Index.vue'),
     meta: {
       title: '首页'
-    }
-  },
-  {
-    path: "/display/:cate_name",
-    name: "DisplayList",
-    component: () => import('../views/DisplayList.vue'),
-    meta: {
-      title: '搜索'
     }
   },
   {

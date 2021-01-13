@@ -66,7 +66,7 @@ export default {
       loading: false,
       finished: false,
       error: false,
-      page: 1,
+      page: 0,
       limit: 10,
       total: 1,
       isLoding: false,
@@ -84,7 +84,27 @@ export default {
       this.getData()
     },
     onLoad() {
-      this.getData()
+      console.log('加载中')
+      this.page++
+      this.axios
+        .get('/test/getInfo', {
+          data: { category: this.category, page: this.page, limit: this.limit },
+        })
+        .then((res) => {
+          var data1 = res.data.data.datalist
+          var total1 = res.data.data.total
+          if (data1) {
+            this.displayList.push(...data1)
+            this.loading = false
+            // 数据全部加载完成
+            if (data1.length >= total1) {
+              this.finished = true
+            }
+          } else {
+            this.loading = false
+            this.finished = true
+          }
+        })
     },
     getData() {
       this.axios
@@ -92,8 +112,7 @@ export default {
           data: { category: this.category, page: this.page, limit: this.limit },
         })
         .then((res) => {
-          this.page++
-          console.log(res.data.data, '1111111111')
+          console.log(res.data, '1111111111')
           var moreLIst = res.data.data.datalist
           if (moreLIst) {
             this.displayList.push(...moreLIst)

@@ -1,6 +1,11 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 
+// const routerPush = VueRouter.prototype.push
+// VueRouter.prototype.push = function push(location) {
+// return routerPush.call(this, location).catch(error=> error)
+// }
+
 Vue.use(VueRouter);
 
 const routes = [
@@ -9,7 +14,27 @@ const routes = [
     name: "Index",
     component: () => import('../views/Index.vue'),
     meta: {
-      title: '首页'
+      title: '首页',
+      keepAlive: true
+    }
+  },
+  {
+    path:"/info",
+    name:"Info",
+    component: () => import('../views/Info.vue'),
+    meta: {
+      title: '文章详情',
+      keepAlive: true
+    }
+  },
+
+  {
+    path:"/detail",
+    name:"Detail",
+    component: () => import('../views/Detail.vue'),
+    meta: {
+      title: '章节详情',
+      keepAlive: false
     }
   },
   {
@@ -17,26 +42,11 @@ const routes = [
     name: "Search",
     component: () => import('../views/Search.vue'),
     meta: {
-      title: '搜索'
+      title: '搜索',
+      keepAlive: true
     }
   },
-  {
-    path: "/showlist",
-    name: "ShowList",
-    component: () => import('../views/ShowList.vue'),
-    meta: {
-      title: '搜索'
-    }
-  },
-  // {
-  //   path: "/about",
-  //   name: "About",
-  //   // route level code-splitting
-  //   // this generates a separate chunk (about.[hash].js) for this route
-  //   // which is lazy-loaded when the route is visited.
-  //   component: () =>
-  //     import(/* webpackChunkName: "about" */ "../views/About.vue")
-  // }
+
 ];
 
 const router = new VueRouter({
@@ -44,5 +54,8 @@ const router = new VueRouter({
   base: process.env.BASE_URL,
   routes
 });
+
+
+
 
 export default router;

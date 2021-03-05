@@ -1,164 +1,116 @@
 <template>
   <div>
     <!-- vant搜索 -->
-    <van-search
-      @input="onInput"
-      @search="onSearch"
-      @cancel="back"
-      autofocus
-      show-action
-      shape="round"
-      v-model="kw"
-      placeholder="请输入搜索关键词"
+    <van-nav-bar
+      title="Search"
+      left-text="返回"
+      left-arrow
+      @click-left="onClickLeft"
     >
-      <!-- <template #left>
-				<van-icon @click="back" style="margin-right: 5px;" size="22px" name="arrow-left" />
-			</template>
-			
-			<template #action>
-				<van-button @click="onSearch" size="small" type="danger" style="border-radius: 5px; font-size: 14px;">搜索</van-button>
-			</template> -->
-    </van-search>
+    </van-nav-bar>
+    <van-search
+      v-model="keyword"
+      placeholder="请输入搜索关键词"
+      @search="handelClickSearch(keyword, 0)"
+    />
 
     <!-- 搜索历史 -->
-    <div v-show="isShow">
-      <div class="search-host">
-        <span>搜索记录：</span>
-        <van-icon name="delete" @click="del" />
+    <van-divider
+      :style="{ color: '#1989fa', borderColor: '#1989fa', padding: '0 16px' }"
+    />
+    <div v-show="show" class="seachHis">
+      <div class="seachHisHead">
+        <h4>搜索历史:</h4>
+        <van-button icon="delete" type="primary" size="mini"
+          >清空历史</van-button
+        >
       </div>
-
       <div>
+        <van-empty v-if="hisList.length == 0" description="暂无历史记录" />
         <van-tag
-          v-for="(item, index) in kwList"
+          v-for="(item, index) in hisList"
           :key="index"
-          @click="searchTs(item)"
-          style="margin: 5px"
+          size="large "
+          type="primary"
+          @click="handelClickSearch(item, 1)"
           >{{ item }}</van-tag
         >
       </div>
     </div>
-
-    <!-- 搜索提示 -->
-    <van-cell-group v-show="!isShow">
-      <van-cell
-        v-for="(item, index) in showList"
+    <div v-show="!show" class="seachRes">
+      <div
+        v-for="(item, index) in list"
         :key="index"
-        :title="item.title"
-        @click="searchTs(item.title)"
-      />
-    </van-cell-group>
+        @click="goBookInfo(item.url, key)"
+      >
+        <van-card :thumb="item.cover">
+          <template #title>
+            <h4>{{ item.name }}</h4>
+            <van-tag plain type="danger">作者:{{ item.author }}</van-tag>
+          </template>
+
+          <template #desc>
+            <p v-html="item.summry" />
+          </template>
+        </van-card>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { Search, Icon, Button, Cell, CellGroup, Tag, Dialog } from 'vant'
+import { NavBar, Search, Divider, Button, Tag, Card, Empty } from 'vant'
 export default {
   name: 'Search',
   components: {
+    [NavBar.name]: NavBar,
     [Search.name]: Search,
-    [Icon.name]: Icon,
+    [Divider.name]: Divider,
     [Button.name]: Button,
-    [Cell.name]: Cell,
-    [CellGroup.name]: CellGroup,
     [Tag.name]: Tag,
-    [Dialog.Component.name]: Dialog.Component, //对话框
+    [Card.name]: Card,
+    [Empty.name]: Empty,
   },
   data() {
     return {
-      kw: '',
-      isShow: true,
+      keyword: '',
+      show: true,
       list: [], //所有数据
       showList: [], //搜索提示数据
-      kwList: [], //搜索记录
+      hisList: [], //搜索记录
     }
   },
-  created() {
-    //初始化保存
-    let kwlist = localStorage.kwList
-    if (kwlist) {
-      this.kwList = JSON.parse(kwlist)
-    }
-  },
-  mounted() {
-    this.axios.get('/test/search').then((res) => {
-      // console.log(res.data.data,'88888')
-      this.list = res.data.data
-    })
-  },
+  created() {},
+
   methods: {
-    back() {
+    onClickLeft() {
       //返回
       this.$router.push({
         path: '/',
       })
     },
-    onInput() {
-      //搜索提示
-      this.showList = []
-
-      this.list.map((item) => {
-        if (item.title.includes(this.kw)) {
-          this.showList.push(item)
-        }
-      })
-
-      if (this.kw.trim() == '') {
-        //显示或隐藏搜索提示
-        this.isShow = true
-      } else {
-        this.isShow = false
+    getLocalStore() {
+      const hisres = localStorage.getItem('keyword')
+      if (hisres) {
+        const list = JSON.parse(hisres)
+        this.hisList = list
+        console.log(list)
       }
     },
-    searchTs(title) {
-      //点击搜索提示或搜索记录，展示对应商品
-      this.$router.push({
-        path: '/showlist',
-        query: {
-          kw: title,
-        },
-      })
-
-      if (!this.kwList.includes(title)) {
-        //不会重复添加相同搜索记录
-        this.kwList.push(title)
-        localStorage.kwList = JSON.stringify(this.kwList)
+    handelClickSearch(keyword, type) {
+      this.keyword = keyword
+      const obj = {
+        keyword: keyword,
+        limit: 0,
       }
+      const res = this.getSearchRes(obj)
+      console.log(res)
     },
-    onSearch() {
-      //确定搜索或点击搜索时触发
-
-      if (this.kw.trim() == '') {
-        //判断内容是否为空
-        return
-      }
-
-      this.$router.push({
-        path: '/showlist',
-        query: {
-          kw: this.kw,
-        },
-      })
-
-      if (!this.kwList.includes(this.kw.trim())) {
-        //不会重复添加相同搜索记录
-        this.kwList.push(this.kw)
-        localStorage.kwList = JSON.stringify(this.kwList)
-      }
-    },
-    del() {
-      //删除搜索记录
-      console.log(this)
-      this.$dialog
-        .confirm({
-          message: '确定要清空搜索记录吗？',
-        })
-        .then(() => {
-          this.kwList = []
-          localStorage.kwList = JSON.stringify(this.kwList)
-        })
-        .catch(() => {
-          // on cancel
-        })
+    getSearchRes(obj) {
+      return this.axios
+        .get('/test/search')
+        .then((res) => res.data.data)
+        .catch((error) => error)
     },
   },
 }
